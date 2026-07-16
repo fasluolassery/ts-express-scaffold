@@ -14,6 +14,7 @@ export const ERROR_MESSAGES = {
   CAST_ERROR: 'Resource not found with id of {id}',
   DUPLICATE_KEY: 'Duplicate field value entered: {keys}',
   CORS_ORIGIN_NOT_ALLOWED: 'Origin not allowed by CORS',
+  TOO_MANY_REQUESTS: 'Too many requests from this IP, please try again later.',
   SYSTEM_UNHEALTHY: 'System is unhealthy',
   DATABASE_UNREACHABLE: 'Database is unreachable',
 } as const;

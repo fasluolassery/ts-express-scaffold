@@ -4,13 +4,19 @@ import logger from '../utils/logger';
 import { SYSTEM_MESSAGES } from '../constants';
 
 export const connectDB = async (): Promise<void> => {
-  const { maxRetries, retryDelayMs, uri } = config.db;
+  const { maxRetries, retryDelayMs, uri, poolSize, connectTimeoutMs, socketTimeoutMs } = config.db;
   let attempt = 1;
   let delay = retryDelayMs;
 
+  const mongooseOptions = {
+    maxPoolSize: poolSize,
+    connectTimeoutMS: connectTimeoutMs,
+    socketTimeoutMS: socketTimeoutMs,
+  };
+
   while (attempt <= maxRetries) {
     try {
-      const conn = await mongoose.connect(uri);
+      const conn = await mongoose.connect(uri, mongooseOptions);
       logger.info(SYSTEM_MESSAGES.DB_CONNECTED.replace('{host}', conn.connection.host));
       return;
     } catch (error) {

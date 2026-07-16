@@ -23,7 +23,10 @@ const validateOrigin = (
 
 export const corsOptions: CorsOptions = {
   origin: validateOrigin,
+  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
   credentials: true,
+  optionsSuccessStatus: 204,
 };
 
 export default corsOptions;

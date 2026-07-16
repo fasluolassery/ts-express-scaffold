@@ -15,8 +15,8 @@ const options: swaggerJSDoc.Options = {
     },
     servers: [
       {
-        url: `http://localhost:${config.server.port}`,
-        description: 'Development Server',
+        url: config.server.url,
+        description: `${config.server.env.charAt(0).toUpperCase() + config.server.env.slice(1)} Server`,
       },
     ],
     components: {
