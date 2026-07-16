@@ -3,9 +3,7 @@ import { LOG_LEVELS, LOG_COLORS, LOG_FORMATS } from '../constants';
 import config from '../config';
 
 const level = () => {
-  const env = config.server.env;
-  const isDevelopment = env === 'development';
-  return isDevelopment ? 'debug' : 'info';
+  return config.logging.level || (config.server.env === 'development' ? 'debug' : 'info');
 };
 
 winston.addColors(LOG_COLORS);

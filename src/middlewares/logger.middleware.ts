@@ -8,8 +8,7 @@ const stream = {
 };
 
 const skip = () => {
-  const env = config.server.env;
-  return env !== 'development';
+  return !config.logging.logHttpRequests;
 };
 
 export const requestLogger = morgan(LOG_FORMATS.MORGAN_FORMAT, { stream, skip });
