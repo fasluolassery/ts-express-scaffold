@@ -17,4 +17,5 @@ export const ERROR_MESSAGES = {
   TOO_MANY_REQUESTS: 'Too many requests from this IP, please try again later.',
   SYSTEM_UNHEALTHY: 'System is unhealthy',
   DATABASE_UNREACHABLE: 'Database is unreachable',
+  EMAIL_ALREADY_EXISTS: 'Email address is already registered',
 } as const;

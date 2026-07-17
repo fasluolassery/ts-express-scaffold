@@ -35,7 +35,14 @@ const parseEnv = () => {
     },
     jwt: {
       secret: data.JWT_SECRET,
-      expiresIn: data.JWT_EXPIRES_IN,
+      access: {
+        secret: data.JWT_ACCESS_SECRET || data.JWT_SECRET,
+        expiresIn: data.JWT_ACCESS_EXPIRES_IN,
+      },
+      refresh: {
+        secret: data.JWT_REFRESH_SECRET || `${data.JWT_SECRET}_refresh`,
+        expiresIn: data.JWT_REFRESH_EXPIRES_IN,
+      },
     },
     cors: {
       origins: data.CORS_ORIGIN.split(',').map((o) => o.trim()),
