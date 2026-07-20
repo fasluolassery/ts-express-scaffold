@@ -1,14 +1,47 @@
 import jwt, { SignOptions } from 'jsonwebtoken';
 import config from '../config';
 
+export interface TokenPayload {
+  sub: string;
+  role: string;
+  iat?: number;
+  exp?: number;
+}
+
+export interface RefreshTokenPayload {
+  sub: string;
+  iat?: number;
+  exp?: number;
+}
+
 /**
- * Generate a JWT token for the user.
- * @param userId User identifier
- * @param role User role
- * @returns JWT signed string
+ * Generate an Access Token for the user (short-lived).
  */
-export const generateToken = (userId: string, role: string): string => {
-  return jwt.sign({ sub: userId, role }, config.jwt.secret, {
-    expiresIn: config.jwt.expiresIn as Exclude<SignOptions['expiresIn'], undefined>,
+export const generateAccessToken = (userId: string, role: string): string => {
+  return jwt.sign({ sub: userId, role }, config.jwt.access.secret, {
+    expiresIn: config.jwt.access.expiresIn as Exclude<SignOptions['expiresIn'], undefined>,
   });
+};
+
+/**
+ * Generate a Refresh Token for the user (long-lived).
+ */
+export const generateRefreshToken = (userId: string): string => {
+  return jwt.sign({ sub: userId }, config.jwt.refresh.secret, {
+    expiresIn: config.jwt.refresh.expiresIn as Exclude<SignOptions['expiresIn'], undefined>,
+  });
+};
+
+/**
+ * Verify an Access Token.
+ */
+export const verifyAccessToken = (token: string): TokenPayload => {
+  return jwt.verify(token, config.jwt.access.secret) as TokenPayload;
+};
+
+/**
+ * Verify a Refresh Token.
+ */
+export const verifyRefreshToken = (token: string): RefreshTokenPayload => {
+  return jwt.verify(token, config.jwt.refresh.secret) as RefreshTokenPayload;
 };

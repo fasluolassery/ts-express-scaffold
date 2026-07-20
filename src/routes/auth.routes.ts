@@ -1,7 +1,14 @@
 import { Router } from 'express';
-import { registerUser } from '../controllers/auth.controller';
-import { registerSchema } from '../validators';
+import {
+  registerUser,
+  loginUser,
+  refreshToken,
+  logoutUser,
+  getMe,
+} from '../controllers/auth.controller';
+import { registerSchema, loginSchema, refreshTokenSchema } from '../validators';
 import { validateBody } from '../middlewares/validation.middleware';
+import { authenticate } from '../middlewares/auth.middleware';
 import { APP_ROUTES } from '../constants';
 
 const router = Router();
@@ -10,8 +17,8 @@ const router = Router();
  * @openapi
  * /api/auth/register:
  *   post:
- *     summary: Register a new user
- *     description: Create a new user profile as a customer or worker, hashes password, generates JWT, and registers user in database.
+ *     summary: Register a new user and auto-login
+ *     description: Creates a new user profile (customer or worker), issues dual tokens, sets HTTP-only cookies, and returns user profile.
  *     tags:
  *       - Authentication
  *     requestBody:
@@ -46,7 +53,7 @@ const router = Router();
  *                 example: "customer"
  *     responses:
  *       201:
- *         description: User registered successfully. Returns details of the created user profile and the authorization token.
+ *         description: User registered & logged in successfully. Sets accessToken and refreshToken HTTP-only cookies.
  *         content:
  *           application/json:
  *             schema:
@@ -62,68 +69,179 @@ const router = Router();
  *                   type: object
  *                   properties:
  *                     user:
- *                       type: object
- *                       properties:
- *                         id:
- *                           type: string
- *                           example: "64a0f4439c2d1b70c382a8bf"
- *                         name:
- *                           type: string
- *                           example: "John Doe"
- *                         email:
- *                           type: string
- *                           example: "john.doe@example.com"
- *                         role:
- *                           type: string
- *                           example: "customer"
- *                         isActive:
- *                           type: boolean
- *                           example: true
- *                         createdAt:
- *                           type: string
- *                           format: date-time
- *                           example: "2026-07-02T13:00:37.000Z"
- *                         updatedAt:
- *                           type: string
- *                           format: date-time
- *                           example: "2026-07-02T13:00:37.000Z"
- *                     token:
- *                       type: string
- *                       example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *                       $ref: '#/components/schemas/UserResponse'
  *       400:
- *         description: Invalid input parameters or failed validation checks.
+ *         description: Validation failure or invalid input parameters.
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: "Validation failed"
- *                 errors:
- *                   type: object
- *                   additionalProperties:
- *                     type: string
- *                   example:
- *                     email: "Please enter a valid email address"
- *                     password: "Password must be at least 6 characters"
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       409:
- *         description: Email is already registered.
+ *         description: Email address is already registered.
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: "Email address is already registered"
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post(APP_ROUTES.AUTH.REGISTER, validateBody(registerSchema), registerUser);
+
+/**
+ * @openapi
+ * /api/auth/login:
+ *   post:
+ *     summary: Authenticate user credentials
+ *     description: Validates email and password, generates fresh Access and Refresh tokens, and sets secure HTTP-only cookies.
+ *     tags:
+ *       - Authentication
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: "john.doe@example.com"
+ *               password:
+ *                 type: string
+ *                 example: "password123"
+ *     responses:
+ *       200:
+ *         description: Login successful. Sets accessToken and refreshToken HTTP-only cookies.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Login successful"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     user:
+ *                       $ref: '#/components/schemas/UserResponse'
+ *       401:
+ *         description: Invalid credentials.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.post(APP_ROUTES.AUTH.LOGIN, validateBody(loginSchema), loginUser);
+
+/**
+ * @openapi
+ * /api/auth/refresh:
+ *   post:
+ *     summary: Refresh access token
+ *     description: Uses valid HTTP-only refreshToken cookie to issue a new short-lived Access Token and rotate the Refresh Token.
+ *     tags:
+ *       - Authentication
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Token refreshed successfully. Rotates accessToken and refreshToken cookies.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Token refreshed successfully"
+ *       401:
+ *         description: Missing, invalid, or expired refresh token.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.post(APP_ROUTES.AUTH.REFRESH, validateBody(refreshTokenSchema), refreshToken);
+
+/**
+ * @openapi
+ * /api/auth/logout:
+ *   post:
+ *     summary: Logout user
+ *     description: Revokes user refresh token session in database and clears HTTP-only authentication cookies.
+ *     tags:
+ *       - Authentication
+ *     security:
+ *       - cookieAuth: []
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Logged out successfully. Clears authentication cookies.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Logged out successfully"
+ *       401:
+ *         description: Unauthorized session.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.post(APP_ROUTES.AUTH.LOGOUT, authenticate, logoutUser);
+
+/**
+ * @openapi
+ * /api/auth/me:
+ *   get:
+ *     summary: Get current authenticated user profile
+ *     description: Fetches user profile for current authenticated session via cookie or Bearer token.
+ *     tags:
+ *       - Authentication
+ *     security:
+ *       - cookieAuth: []
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User profile retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "User profile retrieved successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     user:
+ *                       $ref: '#/components/schemas/UserResponse'
+ *       401:
+ *         description: Unauthorized session.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.get(APP_ROUTES.AUTH.ME, authenticate, getMe);
 
 export default router;

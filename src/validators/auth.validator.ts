@@ -30,4 +30,25 @@ export const registerSchema = z.object({
     .default('customer'),
 });
 
+export const loginSchema = z.object({
+  email: z
+    .string({
+      message: VALIDATION_MESSAGES.EMAIL_REQUIRED,
+    })
+    .email(VALIDATION_MESSAGES.EMAIL_INVALID)
+    .trim()
+    .toLowerCase(),
+  password: z
+    .string({
+      message: VALIDATION_MESSAGES.PASSWORD_REQUIRED,
+    })
+    .min(1, VALIDATION_MESSAGES.PASSWORD_REQUIRED),
+});
+
+export const refreshTokenSchema = z.object({
+  refreshToken: z.string().optional(),
+});
+
 export type RegisterSchemaType = z.infer<typeof registerSchema>;
+export type LoginSchemaType = z.infer<typeof loginSchema>;
+export type RefreshTokenSchemaType = z.infer<typeof refreshTokenSchema>;

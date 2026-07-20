@@ -8,6 +8,7 @@ export interface IUser {
   password?: string;
   role: 'customer' | 'worker';
   isActive: boolean;
+  refreshToken?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -18,6 +19,7 @@ export interface IUserDocument extends Document {
   password?: string;
   role: 'customer' | 'worker';
   isActive: boolean;
+  refreshToken?: string | null;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -58,6 +60,11 @@ const userSchema = new Schema<IUserDocument, IUserModel>(
     isActive: {
       type: Boolean,
       default: true,
+    },
+    refreshToken: {
+      type: String,
+      select: false,
+      default: null,
     },
   },
   {
