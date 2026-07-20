@@ -1,1 +1,1 @@
-npm run lint && npx eslint src/**/*.ts && npx prettier --check "src/**/*.ts"
+npm run lint && npm test && npx eslint src/**/*.ts && npx prettier --check "src/**/*.ts"
