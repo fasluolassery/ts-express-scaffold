@@ -17,4 +17,9 @@ export const ERROR_MESSAGES = {
   TOO_MANY_REQUESTS: 'Too many requests from this IP, please try again later.',
   SYSTEM_UNHEALTHY: 'System is unhealthy',
   DATABASE_UNREACHABLE: 'Database is unreachable',
+  EMAIL_ALREADY_EXISTS: 'Email address is already registered',
+  INVALID_CREDENTIALS: 'Invalid email or password',
+  REFRESH_TOKEN_REQUIRED: 'Refresh token is required',
+  INVALID_REFRESH_TOKEN: 'Invalid or expired refresh token. Please log in again.',
+  USER_NOT_FOUND: 'User profile not found',
 } as const;

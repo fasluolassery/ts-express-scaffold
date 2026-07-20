@@ -5,6 +5,13 @@ export const APP_LIMITS = {
 
 export const APP_ROUTES = {
   API_PREFIX: '/api',
-  HEALTH_CHECK: '/api/health',
   SWAGGER_DOCS: '/api-docs',
+  HEALTH: '/health',
+  AUTH: {
+    REGISTER: '/auth/register',
+    LOGIN: '/auth/login',
+    REFRESH: '/auth/refresh',
+    LOGOUT: '/auth/logout',
+    ME: '/auth/me',
+  },
 } as const;

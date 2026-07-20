@@ -1,6 +1,9 @@
 import { z } from 'zod';
 import { VALIDATION_MESSAGES } from '../constants';
 
+/**
+ * Environment variable validation schema using Zod.
+ */
 export const envSchema = z.object({
   PORT: z.coerce.number().default(5000),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
@@ -10,7 +13,10 @@ export const envSchema = z.object({
   JWT_SECRET: z.string({
     message: VALIDATION_MESSAGES.JWT_SECRET_REQUIRED,
   }),
-  JWT_EXPIRES_IN: z.string().default('1d'),
+  JWT_ACCESS_SECRET: z.string().optional(),
+  JWT_ACCESS_EXPIRES_IN: z.string().default('15m'),
+  JWT_REFRESH_SECRET: z.string().optional(),
+  JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
   CORS_ORIGIN: z.string().default('*'),
   SERVER_URL: z.string().optional(),
   DB_MAX_RETRIES: z.coerce.number().default(5),
