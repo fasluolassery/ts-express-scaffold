@@ -8,7 +8,7 @@ import asyncHandler from './async.middleware';
  */
 export const validateBody = (schema: z.Schema) =>
   asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    req.body = await schema.parseAsync(req.body);
+    req.body = await schema.parseAsync(req.body ?? {});
     next();
   });
 
