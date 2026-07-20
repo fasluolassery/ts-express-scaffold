@@ -45,9 +45,12 @@ export const loginSchema = z.object({
     .min(1, VALIDATION_MESSAGES.PASSWORD_REQUIRED),
 });
 
-export const refreshTokenSchema = z.object({
-  refreshToken: z.string().optional(),
-});
+export const refreshTokenSchema = z
+  .object({
+    refreshToken: z.string().optional(),
+  })
+  .optional()
+  .default({});
 
 export type RegisterSchemaType = z.infer<typeof registerSchema>;
 export type LoginSchemaType = z.infer<typeof loginSchema>;

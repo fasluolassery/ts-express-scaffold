@@ -17,6 +17,7 @@ const format = winston.format.combine(
 const transports = [
   new winston.transports.Console({
     format,
+    silent: process.env.NODE_ENV === 'test',
   }),
 ];
 
