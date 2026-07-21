@@ -18,6 +18,9 @@ const app = express();
 // Security HTTP headers
 app.use(helmet());
 
+// Centralized Request Logger & Correlation ID Tracking
+app.use(requestLogger);
+
 // Global Rate Limiting
 const limiter = rateLimit({
   windowMs: config.rateLimit.windowMs,
@@ -33,9 +36,6 @@ app.use(limiter);
 
 // Enable CORS
 app.use(cors(corsOptions));
-
-// Request Logging
-app.use(requestLogger);
 
 // Body parser, reading data from body into req.body
 app.use(express.json({ limit: APP_LIMITS.BODY_PARSER_JSON_LIMIT }));

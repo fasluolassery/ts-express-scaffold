@@ -27,6 +27,7 @@ export const corsOptions: CorsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
   credentials: true,
   optionsSuccessStatus: 204,
+  maxAge: 86400,
 };
 
 export default corsOptions;

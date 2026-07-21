@@ -20,13 +20,6 @@ export const errorHandler: ErrorRequestHandler = (
   error.isOperational = err.isOperational;
   error.errors = err.errors;
 
-  // Log error using Winston
-  logger.error(`${err.name || 'Error'}: ${err.message}`, {
-    method: req.method,
-    url: req.originalUrl,
-    stack: err.stack,
-  });
-
   // Handle Zod Schema Validation Error
   if (err instanceof ZodError) {
     const validationErrors: Record<string, string> = {};
@@ -70,13 +63,23 @@ export const errorHandler: ErrorRequestHandler = (
     error = new UnauthorizedError(ERROR_MESSAGES.TOKEN_EXPIRED);
   }
 
-  // Send Response
   const statusCode = error.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
+  const isOperational = error.isOperational === true;
+
+  // Log non-operational / 5xx errors as logger.error, and operational 4xx errors as logger.warn in development
+  if (!isOperational || statusCode >= 500) {
+    logger.error(`${err.name || 'Error'}: ${err.message}`, {
+      method: req.method,
+      url: req.originalUrl,
+      stack: err.stack,
+    });
+  } else if (config.server.env === 'development') {
+    logger.warn(`${err.name || 'Error'}: ${err.message}`);
+  }
 
   let responseMessage = error.message || ERROR_MESSAGES.INTERNAL_SERVER_ERROR;
 
   // Mask non-operational/internal errors in production
-  const isOperational = error.isOperational === true;
   if (config.server.env === 'production' && !isOperational) {
     responseMessage = ERROR_MESSAGES.INTERNAL_SERVER_ERROR;
   }

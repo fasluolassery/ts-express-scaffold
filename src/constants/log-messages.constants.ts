@@ -17,6 +17,7 @@ export const LOG_COLORS = {
 export const LOG_FORMATS = {
   TIMESTAMP: 'YYYY-MM-DD HH:mm:ss:ms',
   MORGAN_FORMAT: ':method :url :status :res[content-length] - :response-time ms',
+  CORRELATION_HEADER: 'x-request-id',
 } as const;
 
 export const SYSTEM_MESSAGES = {

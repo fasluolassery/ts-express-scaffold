@@ -1,4 +1,6 @@
 import { Response } from 'express';
+import logger from './logger';
+import config from '../config';
 import { SUCCESS_MESSAGES } from '../constants';
 
 export interface ApiResponseOptions<T> {
@@ -27,6 +29,10 @@ export const sendSuccess = <T>({
   data,
   meta,
 }: ApiResponseOptions<T>): void => {
+  if (config.server.env === 'development' && message) {
+    logger.info(`Success: ${message}`);
+  }
+
   res.status(statusCode).json({
     success: true,
     message,

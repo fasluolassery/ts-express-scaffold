@@ -25,7 +25,7 @@ export const envSchema = z.object({
   DB_CONNECT_TIMEOUT_MS: z.coerce.number().default(10000),
   DB_SOCKET_TIMEOUT_MS: z.coerce.number().default(45000),
   SHUTDOWN_TIMEOUT_MS: z.coerce.number().default(10000),
-  LOG_LEVEL: z.enum(['error', 'warn', 'info', 'http', 'debug']).default('info'),
+  LOG_LEVEL: z.enum(['error', 'warn', 'info', 'http', 'debug']).default('http'),
   LOG_HTTP_REQUESTS: z
     .preprocess((val) => val === 'true' || val === true, z.boolean())
     .default(true),
