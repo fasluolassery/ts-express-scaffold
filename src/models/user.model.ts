@@ -6,7 +6,7 @@ export interface IUser {
   name: string;
   email: string;
   password?: string;
-  role: 'customer' | 'worker';
+  role: 'customer' | 'worker' | 'admin';
   isActive: boolean;
   refreshToken?: string | null;
   createdAt: Date;
@@ -17,7 +17,7 @@ export interface IUserDocument extends Document {
   name: string;
   email: string;
   password?: string;
-  role: 'customer' | 'worker';
+  role: 'customer' | 'worker' | 'admin';
   isActive: boolean;
   refreshToken?: string | null;
   createdAt: Date;
@@ -52,7 +52,7 @@ const userSchema = new Schema<IUserDocument, IUserModel>(
     role: {
       type: String,
       enum: {
-        values: ['customer', 'worker'],
+        values: ['customer', 'worker', 'admin'],
         message: VALIDATION_MESSAGES.ROLE_INVALID,
       },
       default: 'customer',

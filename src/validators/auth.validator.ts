@@ -26,7 +26,6 @@ export const registerSchema = z.object({
     .enum(['customer', 'worker'], {
       message: VALIDATION_MESSAGES.ROLE_INVALID,
     })
-    .optional()
     .default('customer'),
 });
 
