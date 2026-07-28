@@ -5,52 +5,17 @@ import { connectDB, closeDB } from './config/db';
 import logger from './utils/logger';
 import { SYSTEM_MESSAGES } from './constants';
 
-// Handle uncaught exceptions
-process.on('uncaughtException', (err) => {
-  logger.error(SYSTEM_MESSAGES.UNCAUGHT_EXCEPTION);
-  logger.error(`${err.name}: ${err.message}`);
-  if (err.stack) logger.error(err.stack);
-  process.exit(1);
-});
-
 let server: Server | undefined;
+let isShuttingDown = false;
 
-const startServer = async () => {
-  // Connect to Database
-  await connectDB();
+/**
+ * Initiates graceful shutdown of HTTP server and database connections.
+ */
+const gracefulShutdown = async (signal: string): Promise<void> => {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
 
-  // Start HTTP Server
-  const port = config.server.port;
-  server = app.listen(port, () => {
-    logger.info(
-      SYSTEM_MESSAGES.SERVER_START.replace('{env}', config.server.env).replace(
-        '{port}',
-        String(port)
-      )
-    );
-  });
-};
-
-startServer();
-
-// Handle unhandled promise rejections
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-process.on('unhandledRejection', (err: any) => {
-  logger.error(SYSTEM_MESSAGES.UNHANDLED_REJECTION);
-  logger.error(`${err?.name || 'Error'}: ${err?.message || err}`);
-  if (err?.stack) logger.error(err.stack);
-  if (server) {
-    server.close(() => {
-      process.exit(1);
-    });
-  } else {
-    process.exit(1);
-  }
-});
-
-// Handle graceful shutdown signals
-const gracefulShutdown = () => {
-  logger.info(SYSTEM_MESSAGES.GRACEFUL_SHUTDOWN);
+  logger.info(`${SYSTEM_MESSAGES.GRACEFUL_SHUTDOWN} (${signal})`);
 
   // Force exit after configured timeout if graceful shutdown hangs
   const forceExitTimeout = setTimeout(() => {
@@ -58,18 +23,71 @@ const gracefulShutdown = () => {
     process.exit(1);
   }, config.server.shutdownTimeoutMs);
 
-  if (server) {
-    server.close(async () => {
-      logger.info(SYSTEM_MESSAGES.HTTP_SERVER_CLOSED);
-      await closeDB();
-      clearTimeout(forceExitTimeout);
-      process.exit(0);
-    });
-  } else {
+  try {
+    if (server) {
+      await new Promise<void>((resolve) => {
+        server?.close(() => {
+          logger.info(SYSTEM_MESSAGES.HTTP_SERVER_CLOSED);
+          resolve();
+        });
+      });
+    }
+
+    await closeDB();
     clearTimeout(forceExitTimeout);
     process.exit(0);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error(SYSTEM_MESSAGES.GRACEFUL_SHUTDOWN_ERROR.replace('{error}', errorMessage));
+    clearTimeout(forceExitTimeout);
+    process.exit(1);
   }
 };
 
-process.on('SIGTERM', gracefulShutdown);
-process.on('SIGINT', gracefulShutdown);
+/**
+ * Register global process error and termination signal listeners.
+ */
+const setupProcessListeners = (): void => {
+  process.on('uncaughtException', (err: Error) => {
+    logger.error(SYSTEM_MESSAGES.UNCAUGHT_EXCEPTION);
+    logger.error(`${err.name}: ${err.message}`, { stack: err.stack });
+    process.exit(1);
+  });
+
+  process.on('unhandledRejection', (reason: unknown) => {
+    logger.error(SYSTEM_MESSAGES.UNHANDLED_REJECTION);
+    const err = reason instanceof Error ? reason : new Error(String(reason));
+    logger.error(`${err.name}: ${err.message}`, { stack: err.stack });
+    gracefulShutdown('unhandledRejection');
+  });
+
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+};
+
+/**
+ * Boots the HTTP server and establishes database connection.
+ */
+const startServer = async (): Promise<void> => {
+  setupProcessListeners();
+
+  try {
+    await connectDB();
+
+    const port = config.server.port;
+    server = app.listen(port, () => {
+      logger.info(
+        SYSTEM_MESSAGES.SERVER_START.replace('{env}', config.server.env).replace(
+          '{port}',
+          String(port)
+        )
+      );
+    });
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    logger.error(SYSTEM_MESSAGES.SERVER_START_FAILED_DB, { error: errorMessage });
+    process.exit(1);
+  }
+};
+
+startServer();

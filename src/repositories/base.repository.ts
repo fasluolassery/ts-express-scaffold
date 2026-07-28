@@ -1,11 +1,10 @@
-import { Document, Model, QueryFilter, UpdateQuery } from 'mongoose';
+import { Document, Model, QueryFilter, UpdateQuery, AnyKeys, AnyObject } from 'mongoose';
 
 export interface IBaseRepository<T extends Document> {
-  find(filter: QueryFilter<T>): Promise<T[]>;
+  find(filter?: QueryFilter<T>): Promise<T[]>;
   findOne(filter: QueryFilter<T>): Promise<T | null>;
   findById(id: string): Promise<T | null>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  create(item: any): Promise<T>;
+  create(item: AnyKeys<T> & AnyObject): Promise<T>;
   update(id: string, item: UpdateQuery<T>): Promise<T | null>;
   delete(id: string): Promise<T | null>;
 }
@@ -17,7 +16,7 @@ export class BaseRepository<T extends Document> implements IBaseRepository<T> {
     this.model = model;
   }
 
-  async find(filter: QueryFilter<T>): Promise<T[]> {
+  async find(filter: QueryFilter<T> = {} as QueryFilter<T>): Promise<T[]> {
     return this.model.find(filter).exec();
   }
 
@@ -29,8 +28,7 @@ export class BaseRepository<T extends Document> implements IBaseRepository<T> {
     return this.model.findById(id).exec();
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async create(item: any): Promise<T> {
+  async create(item: AnyKeys<T> & AnyObject): Promise<T> {
     return this.model.create(item);
   }
 

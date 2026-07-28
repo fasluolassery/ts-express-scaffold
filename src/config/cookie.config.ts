@@ -1,5 +1,6 @@
 import { CookieOptions } from 'express';
 import config from './index';
+import { APP_ROUTES, COOKIE_MAX_AGE_MS } from '../constants';
 
 /**
  * Base HTTP-only cookie configuration for application security.
@@ -8,6 +9,7 @@ export const baseCookieOptions: CookieOptions = {
   httpOnly: true,
   secure: config.cookie.secure,
   sameSite: config.cookie.sameSite,
+  path: '/',
   ...(config.cookie.domain && { domain: config.cookie.domain }),
 };
 
@@ -16,15 +18,15 @@ export const baseCookieOptions: CookieOptions = {
  */
 export const accessTokenCookieOptions: CookieOptions = {
   ...baseCookieOptions,
-  maxAge: 15 * 60 * 1000, // 15 minutes
+  maxAge: COOKIE_MAX_AGE_MS.ACCESS_TOKEN,
 };
 
 /**
  * Cookie configuration for long-lived refresh tokens (7 days).
- * Restricted to '/api/auth' path so it is only transmitted on auth-related requests.
+ * Restricted to auth sub-routes so it is only transmitted on auth-related requests.
  */
 export const refreshTokenCookieOptions: CookieOptions = {
   ...baseCookieOptions,
-  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-  path: '/api/auth',
+  maxAge: COOKIE_MAX_AGE_MS.REFRESH_TOKEN,
+  path: `${APP_ROUTES.API_PREFIX}${APP_ROUTES.AUTH_PREFIX}`,
 };

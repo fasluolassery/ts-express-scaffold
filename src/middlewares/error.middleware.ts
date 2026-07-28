@@ -1,85 +1,37 @@
 import { Request, Response, NextFunction, ErrorRequestHandler } from 'express';
-import { ZodError } from 'zod';
 import logger from '../utils/logger';
-import { BadRequestError, NotFoundError, UnauthorizedError } from '../errors';
 import { HTTP_STATUS, ERROR_MESSAGES } from '../constants';
 import config from '../config';
-import { sendError } from '../utils/api-response';
+import { sendError, normalizeError, ErrorWithDetails } from '../utils';
 
+/**
+ * Global Express Error Handling Middleware.
+ */
 export const errorHandler: ErrorRequestHandler = (
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  err: any,
+  err: unknown,
   req: Request,
   res: Response,
   _next: NextFunction
 ): void => {
-  let error = { ...err };
-  error.message = err.message;
-  error.stack = err.stack;
-  error.statusCode = err.statusCode;
-  error.isOperational = err.isOperational;
-  error.errors = err.errors;
-
-  // Handle Zod Schema Validation Error
-  if (err instanceof ZodError) {
-    const validationErrors: Record<string, string> = {};
-    err.issues.forEach((issue) => {
-      const path = issue.path.join('.');
-      validationErrors[path] = issue.message;
-    });
-    error = new BadRequestError(ERROR_MESSAGES.VALIDATION_FAILED);
-    (error as BadRequestError & { errors?: Record<string, string> }).errors = validationErrors;
-  }
-
-  // Handle Mongoose Bad ObjectID (CastError)
-  if (err.name === 'CastError') {
-    const message = ERROR_MESSAGES.CAST_ERROR.replace('{id}', err.value);
-    error = new NotFoundError(message);
-  }
-
-  // Handle Mongoose Duplicate Key Error
-  if (err.code === 11000) {
-    const message = ERROR_MESSAGES.DUPLICATE_KEY.replace(
-      '{keys}',
-      Object.keys(err.keyValue).join(', ')
-    );
-    error = new BadRequestError(message);
-  }
-
-  // Handle Mongoose Validation Error
-  if (err.name === 'ValidationError') {
-    const message = Object.values(err.errors)
-      .map((val) => (val as { message: string }).message)
-      .join(', ');
-    error = new BadRequestError(message);
-  }
-
-  // Handle JWT Errors
-  if (err.name === 'JsonWebTokenError') {
-    error = new UnauthorizedError(ERROR_MESSAGES.INVALID_TOKEN);
-  }
-
-  if (err.name === 'TokenExpiredError') {
-    error = new UnauthorizedError(ERROR_MESSAGES.TOKEN_EXPIRED);
-  }
+  const error = normalizeError(err);
+  const rawError = (err && typeof err === 'object' ? err : {}) as ErrorWithDetails;
 
   const statusCode = error.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
   const isOperational = error.isOperational === true;
 
-  // Log non-operational / 5xx errors as logger.error, and operational 4xx errors as logger.warn in development
+  // Log non-operational/5xx errors as logger.error, and operational 4xx as logger.warn in dev
   if (!isOperational || statusCode >= 500) {
-    logger.error(`${err.name || 'Error'}: ${err.message}`, {
+    logger.error(`${rawError.name || 'Error'}: ${error.message}`, {
       method: req.method,
       url: req.originalUrl,
-      stack: err.stack,
+      stack: rawError.stack || error.stack,
     });
   } else if (config.server.env === 'development') {
-    logger.warn(`${err.name || 'Error'}: ${err.message}`);
+    logger.warn(`${rawError.name || 'Error'}: ${error.message}`);
   }
 
-  let responseMessage = error.message || ERROR_MESSAGES.INTERNAL_SERVER_ERROR;
-
   // Mask non-operational/internal errors in production
+  let responseMessage = error.message;
   if (config.server.env === 'production' && !isOperational) {
     responseMessage = ERROR_MESSAGES.INTERNAL_SERVER_ERROR;
   }
@@ -89,7 +41,7 @@ export const errorHandler: ErrorRequestHandler = (
     statusCode,
     message: responseMessage,
     ...(error.errors && { errors: error.errors }),
-    ...(config.server.env === 'development' && { stack: error.stack }),
+    ...(config.server.env === 'development' && { stack: rawError.stack || error.stack }),
   });
 };
 

@@ -1,8 +1,16 @@
 {
-  "name": "service-provider-backend",
+  "name": "ts-express-scaffold",
   "version": "1.0.0",
-  "description": "Service Provider Backend",
+  "description": "Production-ready starter template for building secure, scalable backend REST APIs using Node.js, Express, TypeScript, and MongoDB.",
   "main": "dist/server.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fasluolassery/ts-express-scaffold.git"
+  },
+  "bugs": {
+    "url": "https://github.com/fasluolassery/ts-express-scaffold/issues"
+  },
+  "homepage": "https://github.com/fasluolassery/ts-express-scaffold#readme",
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
@@ -11,7 +19,6 @@
     "lint": "tsc --noEmit",
     "lint:fix": "eslint src/**/*.ts --fix",
     "format": "prettier --write \"src/**/*.ts\"",
-    "seed": "tsx src/seed.ts",
     "prepare": "husky"
   },
   "dependencies": {

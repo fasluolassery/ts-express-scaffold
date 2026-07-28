@@ -1,59 +1,60 @@
-import express, { Request, Response, NextFunction } from 'express';
+import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import compression from 'compression';
-import rateLimit from 'express-rate-limit';
 
-import config from './config';
 import requestLogger from './middlewares/logger.middleware';
 import errorHandler from './middlewares/error.middleware';
+import globalRateLimiter from './middlewares/rate-limiter.middleware';
 import { NotFoundError } from './errors';
 import router from './routes';
 import corsOptions from './config/cors.config';
 import { APP_LIMITS, ERROR_MESSAGES } from './constants';
 
-const app = express();
+/**
+ * Creates and configures the Express Application pipeline.
+ */
+export const createApp = (): Express => {
+  const app = express();
 
-// Security HTTP headers
-app.use(helmet());
+  // Trust first proxy for accurate client IP resolution behind load balancers/reverse proxies
+  app.set('trust proxy', APP_LIMITS.TRUST_PROXY);
 
-// Centralized Request Logger & Correlation ID Tracking
-app.use(requestLogger);
+  // Security HTTP headers
+  app.use(helmet());
 
-// Global Rate Limiting
-const limiter = rateLimit({
-  windowMs: config.rateLimit.windowMs,
-  limit: config.rateLimit.max,
-  standardHeaders: 'draft-7',
-  legacyHeaders: false,
-  message: {
-    success: false,
-    message: ERROR_MESSAGES.TOO_MANY_REQUESTS,
-  },
-});
-app.use(limiter);
+  // Centralized Request Logger
+  app.use(requestLogger);
 
-// Enable CORS
-app.use(cors(corsOptions));
+  // Global Rate Limiting
+  app.use(globalRateLimiter);
 
-// Body parser, reading data from body into req.body
-app.use(express.json({ limit: APP_LIMITS.BODY_PARSER_JSON_LIMIT }));
-app.use(express.urlencoded({ extended: true, limit: APP_LIMITS.BODY_PARSER_URLENCODED_LIMIT }));
-app.use(cookieParser());
+  // Enable CORS
+  app.use(cors(corsOptions));
 
-// Data compression
-app.use(compression());
+  // Body parsers
+  app.use(express.json({ limit: APP_LIMITS.BODY_PARSER_JSON_LIMIT }));
+  app.use(express.urlencoded({ extended: true, limit: APP_LIMITS.BODY_PARSER_URLENCODED_LIMIT }));
+  app.use(cookieParser());
 
-// Mount Centralized Router
-app.use(router);
+  // Response compression
+  app.use(compression());
 
-// Handle unhandled routes (404)
-app.use((req: Request, res: Response, next: NextFunction) => {
-  next(new NotFoundError(ERROR_MESSAGES.ROUTE_NOT_FOUND.replace('{url}', req.originalUrl)));
-});
+  // Mount Centralized Router
+  app.use(router);
 
-// Global Error Handler
-app.use(errorHandler);
+  // Handle 404 Not Found routes
+  app.use((req: Request, _res: Response, next: NextFunction) => {
+    next(new NotFoundError(ERROR_MESSAGES.ROUTE_NOT_FOUND.replace('{url}', req.originalUrl)));
+  });
+
+  // Global Error Handler
+  app.use(errorHandler);
+
+  return app;
+};
+
+export const app = createApp();
 
 export default app;
