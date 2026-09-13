@@ -1,4 +1,26 @@
-import { Document, Model, QueryFilter, UpdateQuery, AnyKeys, AnyObject } from 'mongoose';
+import {
+  Document,
+  Model,
+  QueryFilter,
+  UpdateQuery,
+  AnyKeys,
+  AnyObject,
+  PopulateOptions,
+} from 'mongoose';
+import { PaginationMeta } from '../utils';
+
+export interface PaginationOptions {
+  page?: number;
+  limit?: number;
+  sort?: Record<string, 1 | -1 | 'asc' | 'desc'> | string;
+  select?: string | Record<string, number | boolean>;
+  populate?: PopulateOptions | PopulateOptions[] | string;
+}
+
+export interface PaginatedResult<T> {
+  data: T[];
+  pagination: PaginationMeta;
+}
 
 export interface IBaseRepository<T extends Document> {
   find(filter?: QueryFilter<T>): Promise<T[]>;
@@ -7,6 +29,7 @@ export interface IBaseRepository<T extends Document> {
   create(item: AnyKeys<T> & AnyObject): Promise<T>;
   update(id: string, item: UpdateQuery<T>): Promise<T | null>;
   delete(id: string): Promise<T | null>;
+  findPaginated(filter?: QueryFilter<T>, options?: PaginationOptions): Promise<PaginatedResult<T>>;
 }
 
 export class BaseRepository<T extends Document> implements IBaseRepository<T> {
@@ -38,5 +61,46 @@ export class BaseRepository<T extends Document> implements IBaseRepository<T> {
 
   async delete(id: string): Promise<T | null> {
     return this.model.findByIdAndDelete(id).exec();
+  }
+
+  async findPaginated(
+    filter: QueryFilter<T> = {} as QueryFilter<T>,
+    options: PaginationOptions = {}
+  ): Promise<PaginatedResult<T>> {
+    const page = options.page && Number(options.page) > 0 ? Math.floor(Number(options.page)) : 1;
+    const limit =
+      options.limit && Number(options.limit) > 0 ? Math.floor(Number(options.limit)) : 10;
+    const skip = (page - 1) * limit;
+
+    const query = this.model.find(filter).skip(skip).limit(limit);
+
+    if (options.sort) {
+      query.sort(options.sort as any);
+    }
+
+    if (options.select) {
+      query.select(options.select as any);
+    }
+
+    if (options.populate) {
+      query.populate(options.populate as any);
+    }
+
+    const [data, totalItems] = await Promise.all([
+      query.exec(),
+      this.model.countDocuments(filter).exec(),
+    ]);
+
+    const totalPages = Math.ceil(totalItems / limit) || 1;
+
+    return {
+      data,
+      pagination: {
+        page,
+        limit,
+        totalItems,
+        totalPages,
+      },
+    };
   }
 }
