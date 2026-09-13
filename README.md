@@ -144,7 +144,16 @@ backend/
 
 ---
 
-## 🏃 Running the Application
+### 🐳 Local MongoDB with Docker (Recommended)
+Start local MongoDB with persistent storage in one command:
+```bash
+npm run docker:up
+```
+
+To stop MongoDB:
+```bash
+npm run docker:down
+```
 
 ### Development Mode (with hot reloading)
 ```bash

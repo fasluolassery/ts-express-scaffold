@@ -19,6 +19,10 @@
     "lint": "tsc --noEmit",
     "lint:fix": "eslint src/**/*.ts --fix",
     "format": "prettier --write \"src/**/*.ts\"",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f mongodb",
+    "docker:clean": "docker compose down -v",
     "prepare": "husky"
   },
   "dependencies": {
