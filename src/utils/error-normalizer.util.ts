@@ -29,6 +29,11 @@ export const normalizeError = (err: unknown): AppError => {
     return new BadRequestError(ERROR_MESSAGES.VALIDATION_FAILED, validationErrors);
   }
 
+  // Handle Express body-parser malformed JSON SyntaxError
+  if (err instanceof SyntaxError && 'status' in err && (err as { status: number }).status === 400) {
+    return new BadRequestError('Malformed JSON payload received in request body');
+  }
+
   const errorObj = (err && typeof err === 'object' ? err : {}) as ErrorWithDetails;
 
   // Handle Mongoose Bad ObjectID (CastError)

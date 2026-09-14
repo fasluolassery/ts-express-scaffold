@@ -56,7 +56,9 @@ export class BaseRepository<T extends Document> implements IBaseRepository<T> {
   }
 
   async update(id: string, item: UpdateQuery<T>): Promise<T | null> {
-    return this.model.findByIdAndUpdate(id, item, { returnDocument: 'after' }).exec();
+    return this.model
+      .findByIdAndUpdate(id, item, { returnDocument: 'after', runValidators: true })
+      .exec();
   }
 
   async delete(id: string): Promise<T | null> {
@@ -75,15 +77,15 @@ export class BaseRepository<T extends Document> implements IBaseRepository<T> {
     const query = this.model.find(filter).skip(skip).limit(limit);
 
     if (options.sort) {
-      query.sort(options.sort as any);
+      query.sort(options.sort as string | Record<string, 1 | -1 | 'asc' | 'desc'>);
     }
 
     if (options.select) {
-      query.select(options.select as any);
+      query.select(options.select as Parameters<typeof query.select>[0]);
     }
 
     if (options.populate) {
-      query.populate(options.populate as any);
+      query.populate(options.populate as Parameters<typeof query.populate>[0]);
     }
 
     const [data, totalItems] = await Promise.all([

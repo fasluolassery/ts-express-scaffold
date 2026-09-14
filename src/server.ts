@@ -3,7 +3,7 @@ import app from './app';
 import config from './config';
 import { connectDB, closeDB } from './config/db';
 import logger from './utils/logger';
-import { SYSTEM_MESSAGES } from './constants';
+import { SYSTEM_MESSAGES, APP_ROUTES } from './constants';
 
 let server: Server | undefined;
 let isShuttingDown = false;
@@ -80,6 +80,12 @@ const startServer = async (): Promise<void> => {
         SYSTEM_MESSAGES.SERVER_START.replace('{env}', config.server.env).replace(
           '{port}',
           String(port)
+        )
+      );
+      logger.info(
+        SYSTEM_MESSAGES.SWAGGER_DOCS.replace(
+          '{url}',
+          `${config.server.url}${APP_ROUTES.SWAGGER_DOCS}`
         )
       );
     });

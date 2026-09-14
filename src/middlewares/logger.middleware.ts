@@ -1,7 +1,11 @@
 import morgan, { StreamOptions } from 'morgan';
+import { Request } from 'express';
 import logger from '../utils/logger';
 import { LOG_FORMATS } from '../constants';
 import config from '../config';
+
+// Register custom Morgan token for Request Correlation ID
+morgan.token('id', (req: Request) => req.id || '-');
 
 /**
  * Maps HTTP status code to appropriate Winston log level.

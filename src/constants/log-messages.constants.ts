@@ -16,7 +16,7 @@ export const LOG_COLORS = {
 
 export const LOG_FORMATS = {
   TIMESTAMP: 'YYYY-MM-DD HH:mm:ss:ms',
-  MORGAN_FORMAT: ':method :url :status :res[content-length] - :response-time ms',
+  MORGAN_FORMAT: '[:id] :method :url :status :res[content-length] - :response-time ms',
   CORRELATION_HEADER: 'x-request-id',
 } as const;
 
@@ -37,4 +37,5 @@ export const SYSTEM_MESSAGES = {
   DB_CONNECTION_RETRYING: 'Retrying MongoDB connection in {seconds}s...',
   DB_CONNECTION_MAX_RETRIES_EXCEEDED: 'Max retries ({max}) exceeded.',
   GRACEFUL_SHUTDOWN_TIMEOUT: 'Graceful shutdown timed out, forcing exit.',
+  SWAGGER_DOCS: 'Swagger API documentation available at {url}',
 } as const;

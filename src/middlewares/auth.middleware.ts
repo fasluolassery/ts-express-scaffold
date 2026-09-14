@@ -4,18 +4,6 @@ import { UnauthorizedError, ForbiddenError } from '../errors';
 import { ERROR_MESSAGES } from '../constants';
 import { verifyAccessToken } from '../utils';
 
-/* eslint-disable @typescript-eslint/no-namespace */
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        id: string;
-        role: string;
-      };
-    }
-  }
-}
-
 export type AuthenticatedRequest = Request;
 
 /**

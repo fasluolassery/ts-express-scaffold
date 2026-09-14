@@ -21,13 +21,14 @@ export const errorHandler: ErrorRequestHandler = (
 
   // Log non-operational/5xx errors as logger.error, and operational 4xx as logger.warn in dev
   if (!isOperational || statusCode >= 500) {
-    logger.error(`${rawError.name || 'Error'}: ${error.message}`, {
+    logger.error(`[${req.id || '-'}] ${rawError.name || 'Error'}: ${error.message}`, {
+      requestId: req.id,
       method: req.method,
       url: req.originalUrl,
       stack: rawError.stack || error.stack,
     });
   } else if (config.server.env === 'development') {
-    logger.warn(`${rawError.name || 'Error'}: ${error.message}`);
+    logger.warn(`[${req.id || '-'}] ${rawError.name || 'Error'}: ${error.message}`);
   }
 
   // Mask non-operational/internal errors in production

@@ -36,7 +36,9 @@ const buildJwtConfig = (env: EnvSchemaType) => ({
 });
 
 const buildCorsConfig = (env: EnvSchemaType) => ({
-  origins: env.CORS_ORIGIN.split(',').map((origin) => origin.trim()),
+  origins: env.CORS_ORIGIN.split(',')
+    .map((origin) => origin.trim().replace(/\/+$/, ''))
+    .filter(Boolean),
 });
 
 const buildLoggingConfig = (env: EnvSchemaType) => ({

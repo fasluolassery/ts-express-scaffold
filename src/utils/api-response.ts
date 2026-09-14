@@ -1,6 +1,4 @@
 import { Response } from 'express';
-import logger from './logger';
-import config from '../config';
 import { HTTP_STATUS, SUCCESS_MESSAGES } from '../constants';
 
 export interface PaginationMeta {
@@ -56,10 +54,6 @@ export const sendSuccess = <T>({
   message = SUCCESS_MESSAGES.DEFAULT,
   data,
 }: ApiResponseOptions<T>): void => {
-  if (config.server.env === 'development' && message) {
-    logger.info(`Success: ${message}`);
-  }
-
   const payload: ApiResponsePayload<T> = {
     success: true,
     message,

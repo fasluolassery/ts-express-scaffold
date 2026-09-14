@@ -7,6 +7,7 @@ import compression from 'compression';
 import requestLogger from './middlewares/logger.middleware';
 import errorHandler from './middlewares/error.middleware';
 import globalRateLimiter from './middlewares/rate-limiter.middleware';
+import requestIdMiddleware from './middlewares/request-id.middleware';
 import { NotFoundError } from './errors';
 import router from './routes';
 import corsOptions from './config/cors.config';
@@ -20,6 +21,9 @@ export const createApp = (): Express => {
 
   // Trust first proxy for accurate client IP resolution behind load balancers/reverse proxies
   app.set('trust proxy', APP_LIMITS.TRUST_PROXY);
+
+  // Correlation Request ID for distributed tracing
+  app.use(requestIdMiddleware);
 
   // Security HTTP headers
   app.use(helmet());
