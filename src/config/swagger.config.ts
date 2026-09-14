@@ -28,19 +28,6 @@ const options: swaggerJSDoc.Options = {
           description: 'Authorization header carrying Bearer JWT access token',
         },
       },
-      schemas: {
-        ErrorResponse: {
-          type: 'object',
-          properties: {
-            success: { type: 'boolean', example: false },
-            message: { type: 'string', example: 'Error description' },
-            errors: {
-              type: 'object',
-              additionalProperties: { type: 'string' },
-            },
-          },
-        },
-      },
     },
   },
   apis: ['./src/app.ts', './src/**/*.ts'],

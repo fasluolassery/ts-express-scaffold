@@ -36,13 +36,6 @@ export const verifyToken = <T>(token: string, secret: string): T => {
 };
 
 /**
- * Safely decodes a JWT token payload without verifying signature.
- */
-export const decodeToken = <T>(token: string): T | null => {
-  return jwt.decode(token) as T | null;
-};
-
-/**
  * Generate an Access Token for the user (short-lived).
  */
 export const generateAccessToken = (userId: string, role: string): string => {

@@ -23,6 +23,7 @@
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f mongodb",
     "docker:clean": "docker compose down -v",
+    "seed": "tsx src/seed.ts",
     "prepare": "husky"
   },
   "dependencies": {

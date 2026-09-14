@@ -4,3 +4,4 @@ export * from './app.constants';
 export * from './log-messages.constants';
 export * from './success-messages.constants';
 export * from './validation-messages.constants';
+export * from './auth.constants';

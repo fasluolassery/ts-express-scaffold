@@ -155,6 +155,25 @@ To stop MongoDB:
 npm run docker:down
 ```
 
+### 🔐 Authentication & Seed Data
+This branch (`with-auth`) comes pre-packaged with a complete JWT authentication module and database seeder.
+
+Seed initial Admin and Standard users:
+```bash
+npm run seed
+```
+
+**Default Credentials:**
+- **Admin**: `admin@example.com` / `Admin@12345` (role: `admin`)
+- **User**: `user@example.com` / `User@12345` (role: `user`)
+
+**Available Endpoints:**
+- `POST /api/auth/register` — Create user account
+- `POST /api/auth/login` — Authenticate and receive tokens/cookies
+- `POST /api/auth/refresh-token` — Refresh access token
+- `POST /api/auth/logout` — Clear auth cookies
+- `GET /api/auth/me` — Fetch authenticated user profile (Protected)
+
 ### Development Mode (with hot reloading)
 ```bash
 npm run dev

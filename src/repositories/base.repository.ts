@@ -22,17 +22,7 @@ export interface PaginatedResult<T> {
   pagination: PaginationMeta;
 }
 
-export interface IBaseRepository<T extends Document> {
-  find(filter?: QueryFilter<T>): Promise<T[]>;
-  findOne(filter: QueryFilter<T>): Promise<T | null>;
-  findById(id: string): Promise<T | null>;
-  create(item: AnyKeys<T> & AnyObject): Promise<T>;
-  update(id: string, item: UpdateQuery<T>): Promise<T | null>;
-  delete(id: string): Promise<T | null>;
-  findPaginated(filter?: QueryFilter<T>, options?: PaginationOptions): Promise<PaginatedResult<T>>;
-}
-
-export class BaseRepository<T extends Document> implements IBaseRepository<T> {
+export class BaseRepository<T extends Document> {
   protected model: Model<T>;
 
   constructor(model: Model<T>) {
@@ -75,15 +65,15 @@ export class BaseRepository<T extends Document> implements IBaseRepository<T> {
     const query = this.model.find(filter).skip(skip).limit(limit);
 
     if (options.sort) {
-      query.sort(options.sort as any);
+      query.sort(options.sort as string | Record<string, 1 | -1 | 'asc' | 'desc'>);
     }
 
     if (options.select) {
-      query.select(options.select as any);
+      query.select(options.select as Parameters<typeof query.select>[0]);
     }
 
     if (options.populate) {
-      query.populate(options.populate as any);
+      query.populate(options.populate as Parameters<typeof query.populate>[0]);
     }
 
     const [data, totalItems] = await Promise.all([

@@ -16,8 +16,6 @@ declare global {
   }
 }
 
-export type AuthenticatedRequest = Request;
-
 /**
  * Extract token from Authorization Bearer header or HTTP-only cookie.
  */
@@ -71,5 +69,3 @@ export const authorize = (...allowedRoles: string[]) => {
     next();
   };
 };
-
-export default authenticate;
